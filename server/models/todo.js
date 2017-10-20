@@ -1,4 +1,4 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose');  //Required modules are cached and reused the next time the module is required.
 
 //new mongoose.Schema from docs is not required
 var Todo = mongoose.model('Todo', {
