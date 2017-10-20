@@ -5,12 +5,20 @@ const request = require('supertest');
 var {app} = require('./../server.js')   //     ./ is relative path, then back one directory
 const {Todo} = require('./../models/todo.js');
 
+const todos = [{
+  text: 'First test todo'
+}, {
+  text: 'Second test todo'
+}];
+
 //testing lifecycle method, runs code before every test case
 //here, make sure database is empty
 beforeEach((done) => {
   Todo.remove({}).then(() => {
+    return Todo.insertMany(todos);  //return lets you chain promises
+  }).then(() => {
     done();
-  });
+  })
 });
 
 describe('POST /todos', () => {
@@ -29,7 +37,7 @@ describe('POST /todos', () => {
         return done(err);   //error prints to screen
       }
 
-      Todo.find().then((todos) => {    //testing what got saved in database
+      Todo.find({text: text}).then((todos) => {    //testing what got saved in database
         expect(todos.length).toBe(1);
         expect(todos[0].text).toBe(text);
         done();
@@ -50,7 +58,7 @@ describe('POST /todos', () => {
         }
 
         Todo.find().then((todos) => {
-          expect(todos.length).toBe(0);
+          expect(todos.length).toBe(2);
           done();
         }).catch((e) => {
           done(e);
@@ -58,6 +66,19 @@ describe('POST /todos', () => {
       });
     });
 
+});
 
+
+describe('GET /todos', () => {
+
+it('should get all todos', (done) => {
+  request(app)
+  .get('/todos')
+  .expect(200)
+  .expect((res) => {
+    expect(res.body.todos.length).toBe(2);
+  })
+  .end(done);   //no need to provide a function like before, not doing anything asynchrously
+});
 
 });
