@@ -66,7 +66,7 @@ app.delete('/todos/:id', (req, res) => {
       res.status(404).send();
       return console.log('Unable to find todo');
     }
-    res.send(`${todo} removed`);
+    res.send({todo: todo});
   }).catch((e) => {
     res.status(400).send();
   });
