@@ -136,7 +136,7 @@ describe('DELETE /todos/:id', () => {
 
       //query database using findById, expect toNotExist assertion
       Todo.findById(hexId).then((todo) => {
-        expect(todo).toNotExist;
+        expect(todo).toBeFalsy();
         done()
       }).catch((e) => {
         done(e);

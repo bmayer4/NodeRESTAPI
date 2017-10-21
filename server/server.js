@@ -1,5 +1,6 @@
-var express = require('express');
-var bodyParser = require('body-parser');  //converts JSON into object
+const _ = require('lodash');  //to help w patch
+const express = require('express');
+const bodyParser = require('body-parser');  //converts JSON into object
 const {ObjectID} = require('mongodb');  //gives us isValid method, among others
 
 var {mongoose} = require('./db/mongoose.js');
@@ -71,6 +72,34 @@ app.delete('/todos/:id', (req, res) => {
     res.status(400).send();
   });
 });
+
+app.patch('/todos/:id', (req, res) => {
+  var id = req.params.id;
+  var body = _.pick(req.body, ['text', 'completed']);  //array of properties that you can pull off, if they exist, it
+                                                      //creates an object composed of the picked object properties
+                                                      //we don't want user to be able to update anything they choose
+  if (!ObjectID.isValid(id)) {
+    res.status(404).send();
+  }
+
+  if (_.isBoolean(body.completed) && body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+
+  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+    if (!todo) {
+      res.status(404).send();
+    }
+    res.send({todo: todo});
+  }).catch((e) => {
+    res.status(400).send();
+  })
+
+});
+
 
 app.listen(port, () => {
   console.log(`Started up at port ${port}`);
