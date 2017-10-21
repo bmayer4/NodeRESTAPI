@@ -1,6 +1,7 @@
 const expect = require('expect');
 const request = require('supertest');
 const {ObjectID} = require('mongodb');
+//https://www.udemy.com/the-complete-nodejs-developer-course-2/learn/v4/questions/2614939
 
 //var app = require('./server.js').app;   ES6 destructuring below, same
 var {app} = require('./../server.js')   //     ./ is relative path, then back one directory
@@ -35,7 +36,7 @@ describe('POST /todos', () => {
     .expect((res) => {      //custom expect assertion
       expect(res.body.text).toBe(text);
     })
-    .end((err, res) => {
+    .end((err, res) => { ///OOOOOOOOOHH - look at block
       if (err) {
         return done(err);   //error prints to screen
       }
