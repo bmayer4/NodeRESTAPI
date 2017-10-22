@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 
 var url = process.env.MONGODB_URI;
 
-mongoose.Promise = global.promise;
+mongoose.Promise = global.Promise;
 mongoose.connect(url);
 
 module.exports = {
