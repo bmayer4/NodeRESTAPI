@@ -12,7 +12,9 @@ const todos = [{
   text: 'First test todo'
 }, {
   _id: new ObjectID(),
-  text: 'Second test todo'
+  text: 'Second test todo',
+  completed: true,
+  completedAt: 333
 }];
 
 //testing lifecycle method, runs code before every test case
@@ -159,5 +161,43 @@ describe('DELETE /todos/:id', () => {
     .expect(404)
     .end(done)
   });
+
+});
+
+
+describe('PATCH /todos/:url', () => {
+
+  it('should update the todo', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var text = "text changed from text";
+    var completed = true
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send({text: text, completed: completed})
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(text);
+      expect(res.body.todo.completed).toBeTruthy();
+      expect(res.body.todo.completedAt).toBeTruthy();
+    })
+    .end(done)
+  });
+
+  it('should clear completedAt when todo is not completed', (done) => {
+    var hexId = todos[1]._id.toHexString();
+    var text = "text changed again";
+    var completed = false
+    request(app)
+    .patch(`/todos/${hexId}`)
+    .send({text: text, completed: completed})
+    .expect(200)
+    .expect((res) => {
+      expect(res.body.todo.text).toBe(text);
+      expect(res.body.todo.completed).toBeFalsy();
+      expect(res.body.todo.completedAt).toBe(null);
+    })
+    .end(done)
+  });
+
 
 });
