@@ -1,3 +1,5 @@
+require('./config/config.js');
+
 const _ = require('lodash');  //to help w patch
 const express = require('express');
 const bodyParser = require('body-parser');  //converts JSON into object
@@ -8,7 +10,7 @@ var {Todo} = require('./models/todo');
 var {User} = require('./models/user');
 
 var app = express();
-var port = process.env.PORT || 3000;
+var port = process.env.PORT;  //set by heroku on production, or locally for development or test (above)
 
 app.use(bodyParser.json());  //sending JSON to express application
 
