@@ -36,6 +36,7 @@ var UserSchema = new mongoose.Schema({
 //user will have instance methods, require individual document, like generateAuthToken()
 
 //determines what exactly gets sent back when a mongoose model is converted into a json value
+
 //we are overriding toJSON which already exists
 UserSchema.methods.toJSON = function() {
   var user = this;
@@ -45,7 +46,7 @@ UserSchema.methods.toJSON = function() {
   return _.pick(userObject, ['_id', 'email']);
 };
 
-//add instance methods
+//add instance method
 UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind to this keyword, this stores indiv doc
   var user = this
   var access = 'auth';
@@ -55,10 +56,36 @@ UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind t
     access: access,
     token: token
   });
+  console.log(`user.tokens: ${user.tokens}`);  //_id is generated here by mongodb
 
   return user.save().then(() => {  //return so we eventually chain a promise
     return token;    //return a value here, which will get passed as the success argument for the next then call
   });
+};
+
+
+//add model method
+UserSchema.statics.findByToken = function(token) {
+  var User = this;  //model methods get called with the model as the this binding
+  var decoded;  //undedined because jwt.verify throws error if something goes wrong
+
+  try {
+    decoded = jwt.verify(token, 'abc123');
+    console.log(decoded._id);  //this is users id
+  } catch (e) {
+    // return new Promise((resolve, reject) => {
+    //   reject();
+    // });
+    return Promise.reject();   //simpler, gets handled by catch in server.js
+  }
+
+  //query are nested object properties
+  return User.findOne({
+    _id: decoded._id,
+    'tokens.token': token,            //to query a nested document
+    'tokens.access': 'auth'
+  });
+
 };
 
 var User = mongoose.model('User', UserSchema);
@@ -66,4 +93,4 @@ var User = mongoose.model('User', UserSchema);
 
 module.exports = {
   User: User
-}
+};
