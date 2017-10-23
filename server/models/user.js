@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 var UserSchema = new mongoose.Schema({
   email: {
@@ -36,7 +37,6 @@ var UserSchema = new mongoose.Schema({
 //user will have instance methods, require individual document, like generateAuthToken()
 
 //determines what exactly gets sent back when a mongoose model is converted into a json value
-
 //we are overriding toJSON which already exists
 UserSchema.methods.toJSON = function() {
   var user = this;
@@ -87,6 +87,31 @@ UserSchema.statics.findByToken = function(token) {
   });
 
 };
+
+//will run some code before a given event
+UserSchema.pre('save', function(next) {
+  var user = this;
+
+  if (user.isModified('password')) {   //boolean, don't want to hash already hashed password
+
+    bcrypt.genSalt(10, (err, salt) => {
+      if (err) {
+        return Promise.reject();
+      }
+      bcrypt.hash(user.password, salt, (err, hash) => {
+        if (err) {
+          return Promise.reject();
+        }
+
+        user.password = hash;
+        next();
+      })
+    });
+
+  } else {
+    next();
+  }
+});
 
 var User = mongoose.model('User', UserSchema);
 

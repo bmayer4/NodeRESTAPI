@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 var data = {
   id: 11
@@ -11,6 +12,27 @@ console.log(token);
 //jwt.verify  //takes token and secret, and makes sure that was not manipulated
 var decoded = jwt.verify(token, 'abc123');
 console.log(decoded);
+
+
+//practice for bcryptjs
+var password = 'abc123!';
+
+bcrypt.genSalt(10, (err, salt) => {
+  if (err) {
+
+  }
+  bcrypt.hash(password, salt, (err, hash) => {
+    console.log(hash);  //hash is what we want to store in database
+  })
+});
+
+var hashedPassword = '$2a$10$S12.uJ5lWsRzFZntN53DUu/XkBa2FBCQnUpVcHuwsstx5tFmSB41G';
+bcrypt.compare(password, hashedPassword, (err, res) => {
+  console.log(res);  //true, is a boolean
+  if (res) {
+
+  }
+});
 
 
 
