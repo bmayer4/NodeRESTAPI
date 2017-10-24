@@ -46,17 +46,16 @@ UserSchema.methods.toJSON = function() {
   return _.pick(userObject, ['_id', 'email']);
 };
 
-//add instance method
+//instance method
 UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind to this keyword, this stores indiv doc
   var user = this
   var access = 'auth';
   var token = jwt.sign({_id: user._id.toHexString(), access: access}, 'abc123').toString();
 
-  user.tokens.push({
+  user.tokens.push({   //_id is generated here by mongodb
     access: access,
     token: token
   });
-  console.log(`user.tokens: ${user.tokens}`);  //_id is generated here by mongodb
 
   return user.save().then(() => {  //return so we eventually chain a promise
     return token;    //return a value here, which will get passed as the success argument for the next then call
@@ -79,7 +78,6 @@ UserSchema.statics.findByToken = function(token) {
     return Promise.reject();   //simpler, gets handled by catch in server.js
   }
 
-  //query are nested object properties
   return User.findOne({
     _id: decoded._id,
     'tokens.token': token,            //to query a nested document
@@ -95,13 +93,7 @@ UserSchema.pre('save', function(next) {
   if (user.isModified('password')) {   //boolean, don't want to hash already hashed password
 
     bcrypt.genSalt(10, (err, salt) => {
-      if (err) {
-        return Promise.reject();
-      }
       bcrypt.hash(user.password, salt, (err, hash) => {
-        if (err) {
-          return Promise.reject();
-        }
 
         user.password = hash;
         next();
