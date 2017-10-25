@@ -50,7 +50,7 @@ UserSchema.methods.toJSON = function() {
 UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind to this keyword, this stores indiv doc
   var user = this
   var access = 'auth';
-  var token = jwt.sign({_id: user._id.toHexString(), access: access}, 'abc123').toString();
+  var token = jwt.sign({_id: user._id, access: access}, 'abc123').toString();
 
   user.tokens.push({   //_id is generated here by mongodb
     access: access,

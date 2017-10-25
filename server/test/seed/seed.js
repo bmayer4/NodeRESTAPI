@@ -20,6 +20,7 @@ const users = [{
   password: 'userTwoPassword'
 }];
 
+
 const todos = [{
   _id: new ObjectID(),
   text: 'First test todo'
@@ -35,7 +36,7 @@ const populateTodos = (done) => {
     return Todo.insertMany(todos);  //return lets you chain promises. insertMany won't let us use middleware needed for
   }).then(() => {                  //hashing passwords for users seed data
     done();
-  })
+  });
 };
 
 const populateUsers = (done) => {  //done is callback for mocha beforeEach needs
