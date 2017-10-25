@@ -12,6 +12,7 @@ var UserSchema = new mongoose.Schema({
     trim: true,
     unique: true,
     validate: {
+      isAsync: false,
       validator: validator.isEmail,   //bool
       message: '{VALUE} is not a valid email'
     }
@@ -48,7 +49,7 @@ UserSchema.methods.toJSON = function() {
 
 //instance method
 UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind to this keyword, this stores indiv doc
-  var user = this
+  var user = this;
   var access = 'auth';
   var token = jwt.sign({_id: user._id, access: access}, 'abc123').toString();
 
@@ -62,6 +63,18 @@ UserSchema.methods.generateAuthToken = function() {  //arrow func doesn't bind t
   });
 };
 
+UserSchema.methods.removeToken = function(token) {
+  //$pull           //lets you remove items from an array that match certaim criteria
+  var user = this;
+  return user.update({  //return to chain
+    $pull : {
+      tokens: {       //pull from tokens array any object that has a token property equal to the token argument passed
+        token: token  //whole object gets removed, even with id and access property, and token property
+      }
+    }
+  });
+};
+
 
 //add model method
 UserSchema.statics.findByToken = function(token) {
@@ -70,7 +83,6 @@ UserSchema.statics.findByToken = function(token) {
 
   try {
     decoded = jwt.verify(token, 'abc123');
-    console.log(decoded._id);  //this is users id
   } catch (e) {
     // return new Promise((resolve, reject) => {
     //   reject();
@@ -79,7 +91,7 @@ UserSchema.statics.findByToken = function(token) {
   }
 
   return User.findOne({
-    _id: decoded._id,
+    _id: decoded._id, //this is users id
     'tokens.token': token,            //to query a nested document
     'tokens.access': 'auth'
   });
