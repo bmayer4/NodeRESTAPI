@@ -86,6 +86,22 @@ UserSchema.statics.findByToken = function(token) {
 
 };
 
+
+UserSchema.statics.findByCredentials = function(email, password) {
+  var user = this;
+  return User.findOne({email: email}).then((user) => {
+    if (!user) {
+      return Promise.reject();  //will trigger catch case in server.js
+    }
+    //bcrypt only supports callbacks
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(password, user.password, (err, res) => {
+        res ? resolve(user) : reject();
+      });
+    });
+  });
+};
+
 //will run some code before a given event
 UserSchema.pre('save', function(next) {
   var user = this;
