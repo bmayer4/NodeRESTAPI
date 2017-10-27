@@ -15,9 +15,10 @@ var port = process.env.PORT;  //set by heroku on production, or locally for deve
 
 app.use(bodyParser.json());  //sending JSON to express application
 
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
   var todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
 
   todo.save().then((doc) => {
@@ -27,8 +28,11 @@ app.post('/todos', (req, res) => {
   });
 });
 
-app.post('/todos', (req, res) => {
-  Todo.find().then((todos) => {
+//only returning todos that user who is logged in created
+app.get('/todos', authenticate, (req, res) => {
+  Todo.find({
+    _creator: req.user._id
+  }).then((todos) => {
     res.send({
       todos: todos
     });
@@ -37,16 +41,9 @@ app.post('/todos', (req, res) => {
   });
 });
 
-app.get('/todos', (req, res) => {
-  Todo.find().then((todos) => {
-    res.send({todos});
-  }, (e) => {
-    res.status(400).send(e);
-  });
-});
 
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
@@ -54,7 +51,10 @@ app.get('/todos/:id', (req, res) => {
     console.log('invalid id');
   }
 
-  Todo.findById(id).then((todo) => {
+  Todo.findOne({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
     if (!todo) {
       res.status(404).send();
       return console.log('Unable to find todo');
@@ -65,7 +65,8 @@ app.get('/todos/:id', (req, res) => {
   });
 });
 
-app.delete('/todos/:id', (req, res) => {
+
+app.delete('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
 
   if (!ObjectID.isValid(id)) {
@@ -73,7 +74,10 @@ app.delete('/todos/:id', (req, res) => {
     console.log('invalid id');
   }
 
-  Todo.findByIdAndRemove(id).then((todo) => {
+  Todo.findOneAndRemove({
+    _id: id,
+    _creator: req.user._id
+  }).then((todo) => {
     if (!todo) {
       res.status(404).send();
       return console.log('Unable to find todo');
@@ -84,7 +88,7 @@ app.delete('/todos/:id', (req, res) => {
   });
 });
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
   var id = req.params.id;
   var body = _.pick(req.body, ['text', 'completed']);  //array of properties that you can pull off, if they exist, it
                                                       //creates an object composed of the picked object properties
@@ -100,7 +104,7 @@ app.patch('/todos/:id', (req, res) => {
     body.completedAt = null;
   }
 
-  Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+  Todo.findOneAndUpdate({_id: id, _creator: req.user.id }, {$set: body}, {new: true}).then((todo) => {
     if (!todo) {
       res.status(404).send();
     }
